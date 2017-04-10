@@ -1,0 +1,25 @@
+package Ushtrime;
+
+class Producer extends Thread
+      {
+	   private CubbyHole cubbyhole;
+	   private int number;
+	   public Producer(CubbyHole c, int number) {
+	      cubbyhole = c;
+	      this.number = number;
+	   } 
+	   public void run() 
+	   {
+	      for (int i = 0; i < 10; i++) 
+	      {
+	         cubbyhole.put(i);
+	         String produkti = " produkte";
+	         if(i==1)
+	         {produkti = " produkt";}
+	         System.out.println("Prodhuesi #" + this.number + " vendosi: " + i + produkti);
+	        try {
+	            sleep((int)(Math.random() * 100));
+	         } catch (InterruptedException e) { }
+	      } 
+	   }
+	} 
