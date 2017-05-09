@@ -1,0 +1,55 @@
+
+import java.io.*;
+
+/*
+Kjo Klase definon tipe te ndryshme te mesazheve te cilat shkembehen mes klientit
+dhe Serverit
+*/
+public class ChatMessage implements Serializable 
+{
+    protected static final long serialVersionUID = 1112122200L;
+    
+    
+
+    // WHOISIN -ruan listen e perdoruesve qe do te kycen
+
+    // MESSAGE - paraqet nje mesazh te zakonshem
+
+    // LOGOUT - Shkeput lidhjen me serverin
+
+    static final int WHOISIN = 0, MESSAGE = 1, LOGOUT = 2;
+
+    private int type;
+
+    private String message;
+
+     
+
+    // constructor
+
+    ChatMessage(int type, String message) {
+
+        this.type = type;
+
+        this.message = message;
+
+   }
+
+     
+
+    // getters- Keto metoda kthejn tipin dhe mesazhin
+
+    int getType() {
+
+        return type;
+
+    }
+
+    String getMessage() {
+
+        return message;
+
+   }
+}
+
+

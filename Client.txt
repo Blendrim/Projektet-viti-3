@@ -1,27 +1,218 @@
-package Ushtrime;
-
-public class Client {
-
-public static void main( String args [] ) {
-
-    String filename = "tekst.txt";
-    String filename2 = "tekst1.txt";
-
-    Reader reader = new Reader( filename ) ; 
-    Writer writer = new Writer( filename2 ) ;
-
-    while(true) {
-        reader.run();
-        writer.run();
-    }
-
-  }
-} 
+import java.net.*;
+import java.io.*;
+import java.util.*;
 
 
+public class Client  {
 
+	
+	private ObjectInputStream sInput;		// Per te lexuar nga socketi
+	private ObjectOutputStream sOutput;		// Per te shkruar ne socket
+	private Socket socket;
 
+	
+	private ClientGUI cg;
+	
+	
+	private String server, username;
+	private int port;
 
+	Client(String server, int port, String username) {
+		// which calls the common constructor with the GUI set to null
+		this(server, port, username, null);
+	}
 
+	/*
+	 * Constructor thirret kur perdoret nga Gui
+	 
+	 */
+	Client(String server, int port, String username, ClientGUI cg) {
+		this.server = server;
+		this.port = port;
+		this.username = username;
+		this.cg = cg;
+	}
+	
+	/*
+	 * Per te filluar dialogun
+	 */
+	public boolean start() {
+		// porvon per tu lidh me serverin
+		try {
+			socket = new Socket(server, port);
+		} 
+		catch(Exception ec) {
+			display("Error connectiong to server:" + ec);
+			return false;
+		}
+		
+		String msg = "Connection accepted " + socket.getInetAddress() + ":" + socket.getPort();
+		display(msg);
+	
+		/* KRijimi i nje Data Stream */
+		try
+		{
+			sInput  = new ObjectInputStream(socket.getInputStream());
+			sOutput = new ObjectOutputStream(socket.getOutputStream());
+		}
+		catch (IOException eIO) {
+			display("Exception creating new Input/output Streams: " + eIO);
+			return false;
+		}
 
+		
+		new ListenFromServer().start();
+		// Dergon usernamin tone tek serveri
+		try
+		{
+			sOutput.writeObject(username);
+		}
+		catch (IOException eIO) {
+			display("Exception doing login : " + eIO);
+			disconnect();
+			return false;
+		}
+		// informimi i thirresit qe punoi me sukses
+		return true;
+	}
 
+	/*
+	 * Dergimi i mesazhit ne console ose gui
+	 */
+	private void display(String msg) {
+		if(cg == null)
+			System.out.println(msg);      // println in console mode
+		else
+			cg.append(msg + "\n");		// append to the ClientGUI JTextArea (or whatever)
+	}
+	
+	/*
+	 * Dergimi i mesazhit ne server
+	 * 	 */
+	void sendMessage(ChatMessage msg) {
+		try {
+			sOutput.writeObject(msg);
+		}
+		catch(IOException e) {
+			display("Exception writing to server: " + e);
+		}
+	}
+
+	/*
+	 * Kur diqka shkon keq dhe mbyllen Input/Output streams dhe mbyllet lidhja
+	 */
+	private void disconnect() {
+		try { 
+			if(sInput != null) sInput.close();
+		}
+		catch(Exception e) {} 
+		try {
+			if(sOutput != null) sOutput.close();
+		}
+		catch(Exception e) {} 
+        try{
+			if(socket != null) socket.close();
+		}
+		catch(Exception e) {} 
+		
+		// Informim ne gui
+		if(cg != null)
+			cg.connectionFailed();
+			
+	}
+	
+	 
+	public static void main(String[] args) 
+	{
+		int portNumber = 1453;
+		String serverAddress = "localhost";
+		String userName = "Anonymous";
+
+	
+		switch(args.length) {
+			// > javac Client username portNumber serverAddr
+			case 3:
+				serverAddress = args[2];
+			// > javac Client username portNumber
+			case 2:
+				try {
+					portNumber = Integer.parseInt(args[1]);
+				}
+				catch(Exception e) {
+					System.out.println("Invalid port number.");
+					System.out.println("Usage is: > java Client [username] [portNumber] [serverAddress]");
+					return;
+				}
+			// > javac Client username
+			case 1: 
+				userName = args[0];
+			// > java Client
+			case 0:
+				break;
+			//numer jovalid i arguemeteve
+			default:
+				System.out.println("Usage is: > java Client [username] [portNumber] {serverAddress]");
+			return;
+		}
+		// Krijimi i objektit client
+		Client client = new Client(serverAddress, portNumber, userName);
+
+		if(!client.start())
+			return;
+		
+		// prit per mesazhe nga perodruesi
+		Scanner scan = new Scanner(System.in);
+		
+		while(true) {
+			System.out.print("> ");
+			// Lexon mesazhin nga perdoruesi
+			String msg = scan.nextLine();
+			// logout nese mesazhi eshte bere LOGOUT
+			if(msg.equalsIgnoreCase("LOGOUT")) {
+				client.sendMessage(new ChatMessage(ChatMessage.LOGOUT, ""));
+				
+				break;
+			}
+			// mesazhi WhoIsIn
+			else if(msg.equalsIgnoreCase("WHOISIN")) {
+				client.sendMessage(new ChatMessage(ChatMessage.WHOISIN, ""));				
+			}
+			else {				
+				client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, msg));
+			}
+		}
+		// lidhja mbaroi
+		client.disconnect();	
+	}
+
+	/*
+	 * Klasa e cila prit mesazhin nga serveri dhe e dergon at ne JTextArea(GUI)
+	 */
+	class ListenFromServer extends Thread {
+
+		public void run() {
+			while(true) {
+				try {
+					String msg = (String) sInput.readObject();
+					// if console mode print the message and add back the prompt
+					if(cg == null) {
+						System.out.println(msg);
+						System.out.print("> ");
+					}
+					else {
+						cg.append(msg);
+					}
+				}
+				catch(IOException e) {
+					display("Server has close the connection: " + e);
+					if(cg != null) 
+						cg.connectionFailed();
+					break;
+				}
+				
+				catch(ClassNotFoundException e2) {
+				}
+			}
+		}
+	}
+}
