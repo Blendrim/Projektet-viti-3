@@ -1,0 +1,72 @@
+package Client;
+
+import java.awt.Dimension;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+import Interface.ImagesInterface;
+
+import com.github.sarxos.webcam.Webcam;
+
+public class SendImages implements Runnable
+{
+	private BufferedImage image;
+	final Webcam webcam = Webcam.getDefault();
+	private int memberNumber;
+	private ImagesInterface images;
+	private Thread thread = null;
+	private ByteArrayOutputStream baos;
+
+	public SendImages(ImagesInterface i, int n)
+	{
+		webcam.setViewSize(new Dimension(640, 480));
+		webcam.open();
+		memberNumber = n;
+		images = i;
+	}
+
+	public void run()
+	{
+		while (thread != null)
+		{
+			try
+			{
+				Thread.sleep(30);
+			}
+			catch (InterruptedException e)
+			{
+			}
+			try
+			{
+				image = webcam.getImage();
+				baos = new ByteArrayOutputStream();  
+				if(baos != null)
+				{
+					javax.imageio.ImageIO.write(image, "jpg", baos);  
+					images.inputImage(baos.toByteArray(), memberNumber);
+				}
+			}
+			catch(IOException e)
+			{
+				System.out.println("Catch " + e + " captured at SendImages");
+			}
+		}
+		thread = null;
+	}
+
+	public void start()
+	{
+		if (thread == null)
+		{
+			thread = new Thread(this);
+			thread.start();
+		}
+	}
+
+	public void stop()
+	{
+		thread = null;
+		webcam.close();
+	}
+}

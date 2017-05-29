@@ -1,0 +1,68 @@
+package Server;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import Interface.MembersInterface;
+
+
+public class Members extends UnicastRemoteObject implements MembersInterface
+{	
+	private static final long serialVersionUID = 1L;
+	private boolean[] member = new boolean[5];
+	private String[] membersName = new String[5];
+	private int countMembers = 0;
+
+	public Members() throws RemoteException
+	{		
+	}
+
+	public int addMember(String memberName) throws RemoteException
+	{
+		int answer = -1;
+		for(int i = 0; i < member.length; i++)
+		{
+			if(member[i] == false)
+			{ 
+				member[i] = true;
+				membersName[i] = memberName;
+				answer = i;
+				countMembers++;
+				break;
+			}
+		}
+		return answer;	
+	}
+
+	@Override
+	public int getFirstExistingMember() throws RemoteException
+	{
+		int answer = 0;
+		for(int i = 0; i < member.length; i++)
+		{
+			if(member[i] == true)
+			{ 
+				answer = i;
+				break;
+			}
+		}
+		return answer;
+	}
+
+	@Override
+	public void removeMember(int client) throws RemoteException
+	{
+		member[client] = false;
+		countMembers--;
+	}
+
+	@Override
+	public int getCountMembers() throws RemoteException
+	{
+		return countMembers;
+	}
+
+	@Override
+	public String[] getMembersName() throws RemoteException
+	{
+		return membersName;
+	}
+}

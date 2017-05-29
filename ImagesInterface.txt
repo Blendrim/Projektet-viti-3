@@ -1,0 +1,12 @@
+package Interface;
+
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
+public interface ImagesInterface extends Remote
+{
+	void removeImage(int client) throws RemoteException;
+	byte[][] getAllImages() throws RemoteException;
+	void inputImage(byte[] bs, int client) throws RemoteException;
+	byte[] getMemberImage(int client) throws RemoteException;
+}

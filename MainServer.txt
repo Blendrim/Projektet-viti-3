@@ -1,0 +1,99 @@
+package Server;
+
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+
+import Client.Main;
+
+public class MainServer
+{
+	private JButton connectToMe;
+	private JButton disconnectMe;
+	public MainServer()
+	{
+		JFrame mainFrame = new JFrame();
+		mainFrame.setSize(200, 150);
+		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
+		int x = (int) ((dimension.getWidth() - mainFrame.getWidth()) / 2);
+		int y = (int) ((dimension.getHeight() - mainFrame.getHeight()) / 2);
+		mainFrame.setLocation(x, y);
+		mainFrame.setLayout(new GridLayout(3, 1));
+		MbajtesiAksioneve mbajtesi = new MbajtesiAksioneve();
+		InetAddress IP = null;
+		try
+		{
+			IP = InetAddress.getLocalHost();
+		}
+		catch(UnknownHostException e)
+		{
+			System.out.println("Catch " + e + " captured at MainServer");
+		}
+		connectToMe = new JButton("Lidhuni edhe ju");
+		disconnectMe = new JButton("Ndaleni Serverin");
+		connectToMe.addActionListener(mbajtesi);
+		disconnectMe.addActionListener(mbajtesi);
+		mainFrame.add(new JLabel("IP juaj eshte: " + IP.getHostAddress()));
+		mainFrame.add(connectToMe);
+		mainFrame.add(disconnectMe);
+		mainFrame.setVisible(true);
+	}
+
+	private class MbajtesiAksioneve implements ActionListener
+	{
+		@Override
+		public void actionPerformed(ActionEvent event)
+		{
+			if(event.getSource() == connectToMe)
+			{
+				try
+				{
+					new Main(1);
+				}
+				catch (RemoteException e)
+				{
+					System.out.println("Catch " + e + " captured at MainServer");
+				}
+				catch (NotBoundException e)
+				{
+					System.out.println("Catch " + e + " captured at MainServer");
+				}
+			}
+			else if(event.getSource() == disconnectMe)
+			{
+				System.exit(0);
+			}
+		}
+	}
+
+	public void startServer()
+	{
+		try
+		{
+			Images i = new Images();
+			Members m = new Members();
+			GroupChat ch = new GroupChat();
+			Registry registry = LocateRegistry.createRegistry(1097);
+			registry.rebind("images", i);
+			registry.rebind("members", m);
+			registry.rebind("chat", ch);
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+}

@@ -1,0 +1,107 @@
+package Client;
+
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.rmi.RemoteException;
+
+import javax.swing.JPanel;
+
+import Interface.ImagesInterface;
+import Interface.MembersInterface;
+
+public class MainCameraPanel extends JPanel implements Runnable
+{
+	private static final long serialVersionUID = 1L;
+	private byte[] memberIncomeImage;
+	private ImagesInterface images;
+	private MembersInterface members;
+	private BufferedImage memberImage;
+	private MemberToSee memberToSee;
+	Thread thread = null;
+
+	public MainCameraPanel(ImagesInterface i, MembersInterface m, MemberToSee mts) throws RemoteException
+	{
+		images = i;
+		members = m;
+		mts.setMemberToSee(members.getFirstExistingMember());
+		memberToSee = mts;
+	}
+	
+	public void paintComponent(Graphics g)
+	{	
+		super.paintComponent(g);		
+		try
+		{
+			Thread.sleep(20);
+		}
+		catch(InterruptedException e)
+		{
+			System.out.println("Catch " + e + " captured at MainCameraPanel");
+		}
+		try
+		{
+			if(images.getMemberImage(memberToSee.getMemberToSee()) != null)
+			{
+				memberIncomeImage = images.getMemberImage(memberToSee.getMemberToSee());
+			}
+			else
+			{
+				memberIncomeImage = images.getMemberImage(members.getFirstExistingMember());
+				memberToSee.setMemberToSee(members.getFirstExistingMember());
+			}
+		}
+		catch (RemoteException e)
+		{
+			System.out.println("Catch " + e + " captured at MainCameraPanel");
+		}
+		try
+		{
+			if(memberIncomeImage != null)
+			{
+				memberImage = javax.imageio.ImageIO.read(new ByteArrayInputStream(memberIncomeImage));
+				g.drawImage(memberImage, 10, 10, 454, 340, null);
+			}
+		}
+		catch (IOException e)
+		{
+			System.out.println("Catch " + e + " captured at MainCameraPanel");
+		}
+	}
+
+	public void start()
+	{
+		if (thread == null)
+		{
+			thread = new Thread(this);
+			thread.start();
+		}
+	}
+
+	public void stop()
+	{
+		thread = null;
+	}
+
+	public void run()
+	{
+		while (thread != null)
+		{
+			try
+			{
+				Thread.sleep(100);
+			}
+			catch (InterruptedException e)
+			{
+			}
+			repaint();
+		}
+		thread = null;
+	}
+
+	public void update(Graphics g)
+	{
+		paint(g);
+	}
+}

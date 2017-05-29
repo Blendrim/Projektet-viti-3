@@ -1,0 +1,13 @@
+package Interface;
+
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
+public interface MembersInterface extends Remote
+{	
+	int addMember(String memberName) throws RemoteException;
+	void removeMember(int client) throws RemoteException;
+	int getCountMembers() throws RemoteException;
+	String[] getMembersName() throws RemoteException;
+	int getFirstExistingMember() throws RemoteException;
+}

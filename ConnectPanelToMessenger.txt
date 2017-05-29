@@ -1,0 +1,25 @@
+package Client;
+
+import Interface.MessengerInterface;
+
+public class ConnectPanelToMessenger
+{
+	private MessengerInterface m;
+	private ChatPanel c;
+
+	public MessengerInterface getMessenger()
+	{
+		return m;
+	}
+
+	public ChatPanel getChatPanel()
+	{
+		return c;
+	}
+
+	public void setter(MessengerInterface m, ChatPanel c)
+	{
+		this.m = m;
+		this.c = c;
+	}
+}

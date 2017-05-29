@@ -1,0 +1,16 @@
+package Client;
+
+public class MemberToSee
+{
+	private int memberToSee;
+
+	public void setMemberToSee(int m)
+	{
+		memberToSee = m;
+	}
+
+	public int getMemberToSee()
+	{
+		return memberToSee;
+	}
+}

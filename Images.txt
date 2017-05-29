@@ -1,0 +1,141 @@
+package Client;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.rmi.RemoteException;
+
+import javax.swing.JButton;
+import javax.swing.JPanel;
+
+import Interface.ImagesInterface;
+import Interface.MembersInterface;
+
+public class CamerasPanel extends JPanel implements Runnable
+{
+	private static final long serialVersionUID = 1L;
+	private ImagesInterface images;
+	private MembersInterface members;
+	private MemberToSee memberToSee;
+	BufferedImage myPicture;
+	MainCameraPanel mp;
+	String[] allNames = null;
+	JButton[] button = new JButton[5];
+	Thread thread = null;
+
+	public CamerasPanel(ImagesInterface i, MembersInterface m, MainCameraPanel mp, MemberToSee mts) throws RemoteException
+	{
+		this.mp = mp;
+		images = i;
+		members = m;
+		mbajtesiIAksioneve mbajtesi = new mbajtesiIAksioneve();
+		for(int j = 0; j < button.length; j++)
+		{	
+			button[j] = new JButton();
+			button[j].setBackground(Color.cyan);
+			button[j].addActionListener(mbajtesi);
+		}
+		memberToSee = mts;
+		button[memberToSee.getMemberToSee()].setBackground(Color.green);
+	}
+
+	private class mbajtesiIAksioneve implements ActionListener
+	{
+
+		@Override
+		public void actionPerformed(ActionEvent event) 
+		{	
+			for (int j = 0;j < button.length; j++)
+			{	
+				button[j].setBackground(Color.cyan);
+				if(event.getSource() == button[j])
+				{
+					memberToSee.setMemberToSee(j);
+					button[j].setBackground(Color.green);
+				}
+			}
+		}
+	}
+	
+	public void paintComponent(Graphics g)
+	{	
+		super.paintComponent(g);
+		byte[][] allImages = null;
+
+		try
+		{
+			allImages = images.getAllImages();
+			allNames = members.getMembersName();
+		}
+		catch (RemoteException e)
+		{
+			System.out.println("Catch " + e + " captured at CamerasPanel");
+		}
+		int k = allImages.length;
+		int v = 0;
+		for(int i = 0; i < k; i++)
+		{
+			if(allImages[i] != null)
+			{
+				try
+				{
+					myPicture = javax.imageio.ImageIO.read(new ByteArrayInputStream(allImages[i]));
+					g.drawImage(myPicture, 40 + v, 20, 176, 144, null);
+					button[i].setBounds(40 + v,170, 176, 40);
+					button[i].setText(allNames[i]);
+					add(button[i]);
+				}
+				catch (IOException e)
+				{
+					System.out.println("Catch " + e + " captured at CamerasPanel");
+				}
+				v += 216; 
+			}
+			else
+			{
+				remove(button[i]);
+				button[i].setBackground(Color.cyan);
+				button[memberToSee.getMemberToSee()].setBackground(Color.green);
+			}
+		}
+	}
+
+	public void start()
+	{
+		if (thread == null)
+		{
+			thread = new Thread(this);
+			thread.start();
+		}
+	}
+
+	public void stop()
+	{
+		thread = null;
+	}
+
+	public void run()
+	{
+		while (thread != null)
+		{
+			try
+			{
+				Thread.sleep(30);
+			}
+			catch (InterruptedException e)
+			{
+			}
+			repaint();
+		}
+		thread = null;
+	}
+
+	public void update(Graphics g)
+	{
+		paint(g);
+	}
+}
