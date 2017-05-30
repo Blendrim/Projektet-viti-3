@@ -1,0 +1,82 @@
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+
+import Client.Main;
+import Server.MainServer;
+
+
+
+public class VideoConference
+{
+	private JButton startServer;
+	private JButton connectToServer;
+
+	public VideoConference()
+	{
+		JFrame mainFrame = new JFrame();
+		mainFrame.setSize(300, 80);
+		mainFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
+		int x = (int) ((dimension.getWidth() - mainFrame.getWidth()) / 2);
+		int y = (int) ((dimension.getHeight() - mainFrame.getHeight()) / 2);
+		mainFrame.setLocation(x, y);
+		mainFrame.setLayout(new GridLayout(1, 2));
+		startServer = new JButton("Starto serverin");
+		connectToServer = new JButton("Lidhu me serverin");
+		MbajtesiAksioneve mbajtesi = new MbajtesiAksioneve(mainFrame);
+		startServer.addActionListener(mbajtesi);
+		connectToServer.addActionListener(mbajtesi);
+		mainFrame.setResizable(false);
+		mainFrame.add(startServer);
+		mainFrame.add(connectToServer);
+		mainFrame.setVisible(true);
+	}
+
+	private class MbajtesiAksioneve implements ActionListener
+	{
+		private JFrame mainFrame;
+
+		public MbajtesiAksioneve(JFrame m)
+		{
+			mainFrame = m;
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent event)
+		{
+			if(event.getSource() == startServer)
+			{
+				new MainServer().startServer();
+				mainFrame.dispose();
+			}
+			else if(event.getSource() == connectToServer)
+			{
+				try
+				{
+					new Main(0);
+				}
+				catch(NotBoundException e)
+				{
+					System.out.println("Catch " + e + " captured at VideoConference");
+				}
+				catch(RemoteException e)
+				{
+					System.out.println("Catch " + e + " captured at VideoConference");
+				}
+			}
+		}
+	}
+
+	public static void main(String[] args)
+	{
+		new VideoConference();
+	}
+}
